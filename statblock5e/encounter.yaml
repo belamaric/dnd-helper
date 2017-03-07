@@ -1,0 +1,8 @@
+source: "/Users/jbelamaric/dev/github/DnDAppFiles/Bestiary/Monster Manual Bestiary.xml"
+name: "The Bugbears"
+monsters:
+  - name: Bugbear
+    quantity: 1
+  - name: Kobold
+    quantity: 2
+  - name: Ancient Red Dragon
