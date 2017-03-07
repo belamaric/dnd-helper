@@ -42,13 +42,13 @@ type Monster struct {
 	Int string `xml:"int"`
 	Wis string `xml:"wis"`
 	Cha string `xml:"cha"`
-	Senses string `xml:"senses"`
-	Skill string `xml:"skill"`
 	Save string `xml:"save"`
-	DamageImmunity string `xml:"immune"`
-	ConditionImmunity string `xml:"conditionImmune"`
+	Skill string `xml:"skill"`
 	Vulnerabilities string `xml:"vulnerable"`
 	Resistances string `xml:"resist"`
+	DamageImmunity string `xml:"immune"`
+	ConditionImmunity string `xml:"conditionImmune"`
+	Senses string `xml:"senses"`
 	Passive string `xml:"passive"`
 	Languages string `xml:"languages"`
 	Cr string `xml:"cr"`
@@ -57,6 +57,12 @@ type Monster struct {
 	Actions []Trait `xml:"action"`
 	Reactions []Trait `xml:"reaction"`
 	Legendary []Trait `xml:"legendary"`
+
+	Spells string `xml:"spells"` // included in text
+	Slots string `xml:"slots"` // included in text
+
+	Description string `xml:"description"`
+
        	Extras []struct {
        	     XMLName xml.Name
        	     Content string `xml:",innerxml"`
@@ -65,21 +71,25 @@ type Monster struct {
 
 func (m Monster) SizeName() (string) {
 	switch m.Size {
-	case "M":
-		return "medium"
+	case "G":
+		return "Gargantuan"
+	case "H":
+		return "Huge"
 	case "L":
-		return "large"
+		return "Large"
+	case "M":
+		return "Medium"
 	case "S":
-		return "small"
+		return "Small"
 	case "T":
-		return "tiny"
+		return "Tiny"
 	default:
 		return m.Size
 	}
 }
 
 func (m Monster) Subtitle() (string) {
-	return m.SizeName() + ", " + m.Type + ", " + m.Alignment
+	return m.SizeName() + " " + m.Type + ", " + m.Alignment
 }
 
 func (m Monster) EncodeStatBlock(w io.Writer) error {
@@ -108,31 +118,6 @@ func (m Monster) EncodeStatBlock(w io.Writer) error {
                    data-int="{{.Int}}"
                    data-wis="{{.Wis}}"
                    data-cha="{{.Cha}}"></abilities-block>
-
-{{with .DamageImmunity}}
-  <property-line>
-   <h4>Damage Immunities</h4>
-   <p>{{.}}</p>
-  </property-line>
-{{end}}
-{{with .ConditionImmunity}}
-  <property-line>
-   <h4>Condition Immunities</h4>
-   <p>{{.}}</p>
-  </property-line>
-{{end}}
-{{with .Vulnerabilities}}
-  <property-line>
-   <h4>Vulnerabilities</h4>
-   <p>{{.}}</p>
-  </property-line>
-{{end}}
-{{with .Resistances}}
-  <property-line>
-   <h4>Resistances</h4>
-   <p>{{.}}</p>
-  </property-line>
-{{end}}
 {{with .Save}}
   <property-line>
    <h4>Saving Throws</h4>
@@ -145,15 +130,37 @@ func (m Monster) EncodeStatBlock(w io.Writer) error {
    <p>{{.}}</p>
   </property-line>
 {{end}}
-{{with .Senses}}
+{{with .Vulnerabilities}}
   <property-line>
-   <h4>Senses</h4>
+   <h4>Damage Vulnerabilities</h4>
+   <p>{{.}}</p>
+  </property-line>
+{{end}}
+{{with .Resistances}}
+  <property-line>
+   <h4>Damage Resistances</h4>
+   <p>{{.}}</p>
+  </property-line>
+{{end}}
+{{with .DamageImmunity}}
+  <property-line>
+   <h4>Damage Immunities</h4>
+   <p>{{.}}</p>
+  </property-line>
+{{end}}
+{{with .ConditionImmunity}}
+  <property-line>
+   <h4>Condition Immunities</h4>
    <p>{{.}}</p>
   </property-line>
 {{end}}
   <property-line>
-   <h4>Passive Perception</h4>
-   <p>{{.Passive}}</p>
+   <h4>Senses</h4>
+{{if .Senses}}
+   <p>{{.Senses}}, passive Perception {{.Passive}}</p>
+{{else}}
+   <p>passive Perception {{.Passive}}</p>
+{{end}}
   </property-line>
 {{with .Languages}}
   <property-line>
@@ -210,6 +217,12 @@ func (m Monster) EncodeStatBlock(w io.Writer) error {
   {{end}}
   </property-block>
  {{end}}
+ {{end}}
+ {{with .Description}}
+  <property-block>
+    <h4></h4>
+    <p>{{.}}</p>
+  </property-block>
  {{end}}
 </stat-block>
 `
