@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"os"
 )
@@ -22,7 +21,11 @@ func main() {
 			log.Printf("ERROR: Could not load encounter: %s", err)
 			os.Exit(1)
 		}
-		fmt.Println(e.Summary())
+		err = e.Print(os.Stdout)
+		if err != nil {
+			log.Printf("ERROR: Could not print encounter: %s", err)
+			os.Exit(2)
+		}
 		return
 	}
 
@@ -30,7 +33,7 @@ func main() {
 		c, err := LoadCompendium(check)
 		if err != nil {
 			log.Printf("ERROR: Could not load monsters: %s", err)
-			os.Exit(1)
+			os.Exit(3)
 		}
 
 		checkXml(c)

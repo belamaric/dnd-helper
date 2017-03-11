@@ -2,7 +2,6 @@ source: "/Users/jbelamaric/dev/github/DnDAppFiles/Bestiary/Monster Manual Bestia
 name: "The Bugbears"
 monsters:
   - name: Bugbear
-    quantity: 1
-  - name: Kobold
     quantity: 2
-  - name: Ancient Red Dragon
+  - name: Kobold
+    quantity: 6

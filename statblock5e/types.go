@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"io"
 	"io/ioutil"
 	"encoding/xml"
@@ -89,16 +88,28 @@ func LoadCompendium(path string) (*Compendium, error) {
 	return c, nil
 }
 
-func (e *Encounter) Summary() (string, error) {
-	buf := &bytes.Buffer{}
-	for _, m := range e.Monsters {
-		err := m.Monster.EncodeStatBlock(buf)
-		if err != nil {
-			return "", err
+func (e *Encounter) Print(w io.Writer) error {
+	tmpl := template.New("page")
+	tmpl.Funcs(template.FuncMap{"add": func(i, j int) int { return i+j }})
+	tmpl.Funcs(template.FuncMap{"breakrow": func(i, j int) bool { return (i+1) %j == 0 }})
+	tmpl.Funcs(template.FuncMap{"intarray": func(i, j int) []int {
+		a := []int{}
+		inc := 1
+		if i >= j {
+			inc = -1
 		}
-	}
-	return strings.Replace(html, placeholder, buf.String(), 1), nil
+		for k := i; k != j; k = k + inc {
+			a = append(a, k)
+		}
+		return a
+		}})
+	tmpl, err := tmpl.Parse(page)
+	if err != nil { return err }
+	err = tmpl.Execute(w, e)
+	if err != nil { return err }
+	return nil
 }
+
 
 type Trait struct {
 	XMLName xml.Name
@@ -157,7 +168,7 @@ type Monster struct {
         } `xml:",any"`
 }
 
-func (m Monster) SizeName() (string) {
+func (m *Monster) SizeName() (string) {
 	switch m.Size {
 	case "G":
 		return "Gargantuan"
@@ -176,7 +187,23 @@ func (m Monster) SizeName() (string) {
 	}
 }
 
-func (m Monster) Subtitle() (string) {
+func (m *Monster) ShortAc() (string) {
+	s := strings.SplitN(m.Ac, " ", 2)
+	if len(s) > 0 {
+		return s[0]
+	}
+	return m.Ac
+}
+
+func (m *Monster) ShortHp() (string) {
+	s := strings.SplitN(m.Hp, " ", 2)
+	if len(s) > 0 {
+		return s[0]
+	}
+	return m.Hp
+}
+
+func (m *Monster) Subtitle() (string) {
 	return m.SizeName() + " " + m.Type + ", " + m.Alignment
 }
 
@@ -189,8 +216,12 @@ func (c *Compendium) FindMonster(name string) *Monster {
 	return nil
 }
 
-func (m Monster) EncodeStatBlock(w io.Writer) error {
-	tmplTxt := `
+const page = `
+{{define "MONSTER"}}
+<div style="width: 50px; border-bottom: 1px solid black;"/>
+{{.Name}} {{.}}
+{{end}}
+{{define "STATBLOCK"}}
 <stat-block>
  <creature-heading>
   <h1>{{.Name}}</h1>
@@ -322,20 +353,44 @@ func (m Monster) EncodeStatBlock(w io.Writer) error {
   </property-block>
  {{end}}
 </stat-block>
-`
-	tmpl, err := template.New("stat-block").Parse(tmplTxt)
-	if err != nil { return err }
-	err = tmpl.Execute(w, m)
-	if err != nil { return err }
-	return nil
-}
-
-
-
-const placeholder = `___STAT_BLOCK___`
-const html = `
+{{end}}
 <!DOCTYPE html>
-<html><head><link href="https://fonts.googleapis.com/css?family=Libre+Baskerville:700" rel="stylesheet" type="text/css"/><link href="http://fonts.googleapis.com/css?family=Noto+Sans:400,700,400italic,700italic" rel="stylesheet" type="text/css"/><meta charset="utf-8"/><title>Statblock example</title><style>
+<html>
+<head>
+ <link href="https://fonts.googleapis.com/css?family=Libre+Baskerville:700" rel="stylesheet" type="text/css"/>
+ <link href="http://fonts.googleapis.com/css?family=Noto+Sans:400,700,400italic,700italic" rel="stylesheet" type="text/css"/>
+ <meta charset="utf-8"/>
+ <title>{{.Name}}</title>
+ <style>
+      h1.encounter {
+      		font-family: 'Libre Baskerville', 'Lora', 'Calisto MT',
+                   'Bookman Old Style', Bookman, 'Goudy Old Style',
+                   Garamond, 'Hoefler Text', 'Bitstream Charter',
+                   Georgia, serif;
+      		color: #7A200D;
+		margin: 5pt;
+		text-decoration: underline;
+	}
+	tr.header {
+      		font-family: 'Noto Sans', 'Myriad Pro', Calibri, Helvetica, Arial,
+                    sans-serif;
+      		font-weight: bold;
+		font-size: 12pt;
+      		color: #7A200D;
+	}
+	tr.header td {
+		padding: 2px;
+	}
+	tr.content {
+      		font-family: 'Noto Sans', 'Myriad Pro', Calibri, Helvetica, Arial,
+                    sans-serif;
+		font-size: 8pt;
+      		color: #7A200D;
+	}
+	tr.content td {
+		vertical-align: bottom;
+		padding-right: 4px;
+	}
       body {
         margin: 0;
       }
@@ -345,8 +400,12 @@ const html = `
         shadow. */
         margin-left: 20px;
         margin-top: 20px;
+	vertical-align: top;
       }
-    </style></head><body><template id="tapered-rule">
+ </style>
+</head>
+<body>
+<template id="tapered-rule">
   <style>
     svg {
       fill: #922610;
@@ -359,7 +418,8 @@ const html = `
   <svg height="5" width="400">
     <polyline points="0,0 400,2.5 0,5"></polyline>
   </svg>
-</template><script>
+</template>
+<script>
 (function(window, document) {
   var elemName = 'tapered-rule';
   var thatDoc = document;
@@ -375,7 +435,8 @@ const html = `
   });
   thatDoc.registerElement(elemName, {prototype: proto});
 })(window, document);
-</script><template id="top-stats">
+</script>
+<template id="top-stats">
   <style>
     ::content * {
       color: #7A200D;
@@ -385,7 +446,8 @@ const html = `
   <tapered-rule></tapered-rule>
   <content></content>
   <tapered-rule></tapered-rule>
-</template><script>
+</template>
+<script>
 (function(window, document) {
   var elemName = 'top-stats';
   var thatDoc = document;
@@ -401,7 +463,8 @@ const html = `
   });
   thatDoc.registerElement(elemName, {prototype: proto});
 })(window, document);
-</script><template id="creature-heading">
+</script>
+<template id="creature-heading">
   <style>
     ::content > h1 {
       font-family: 'Libre Baskerville', 'Lora', 'Calisto MT',
@@ -425,7 +488,8 @@ const html = `
   </style>
   <content select="h1"></content>
   <content select="h2"></content>
-</template><script>
+</template>
+<script>
 (function(window, document) {
   var elemName = 'creature-heading';
   var thatDoc = document;
@@ -441,7 +505,8 @@ const html = `
   });
   thatDoc.registerElement(elemName, {prototype: proto});
 })(window, document);
-</script><template id="abilities-block">
+</script>
+<template id="abilities-block">
   <style>
     table {
       width: 100%;
@@ -455,7 +520,8 @@ const html = `
   </style>
   <tapered-rule></tapered-rule>
   <table>
-    <tbody><tr>
+   <tbody>
+    <tr>
       <th>STR</th>
       <th>DEX</th>
       <th>CON</th>
@@ -471,7 +537,8 @@ const html = `
       <td id="wis"></td>
       <td id="cha"></td>
     </tr>
-  </tbody></table>
+   </tbody>
+  </table>
   <tapered-rule></tapered-rule>
 </template><script>
 (function(window, document) {
@@ -714,8 +781,52 @@ const html = `
   thatDoc.registerElement(elemName, {prototype: proto});
 })(window, document);
 </script>
-  
-___STAT_BLOCK___
 
+<h1 class="encounter">{{.Name}}</h1>
+<table>
+<tr>
+<td colspan="2">
+<table>
+<tr>
+<td style="vertical-align: top">
+<div style="margin-left: 1em; border: 1px solid black; padding: 4px">
+ <table>
+  <tr class="header"><td>Initiative</td></tr>
+{{range intarray 22 4}}
+  <tr class="content"><td width="120px" style="border-bottom: 1px solid black; margin-right: 1em">{{.}}</td></tr>
+{{end}}
+ </table>
+</div>
+</td>
+<td style="vertical-align: top">
+<div style="margin-left: 1em; border: 1px solid black; padding: 4px">
+ <table>
+  <tr class="header">
+   <td>Monster</td>
+   <td>AC</td>
+   <td>Conditions</td>
+   <td>Current HP</td>
+  </tr>
+{{range $i, $m := .Monsters}}
+{{range $num := intarray 0 $m.Quantity}}
+  <tr class="content">
+   <td>{{$m.Monster.Name}} {{add $num 1}}</td><td>{{$m.Monster.ShortAc}}</td>
+   <td style="width: 40px; border-bottom: 1px solid black"/>
+   <td style="width: 300px; border-bottom: 1px solid black">{{$m.Monster.ShortHp}}</td>
+  </tr>
+{{end}}
+{{end}}
+ </table>
+</div>
+</td></tr></table>
+</td>
+</tr>
+<tr>
+{{range $i, $m := .Monsters}}
+<td valign="top">{{template "STATBLOCK" $m.Monster}}</td>
+{{if breakrow $i 2}}</tr><tr>{{end}}
+{{end}}
+</tr>
+</table>
 </body></html>
 `
