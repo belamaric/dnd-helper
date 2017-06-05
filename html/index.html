@@ -1,7 +1,146 @@
-<html>
-<head><title>DM Tool</title></head>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>jQuery UI Dialog - Modal form</title>
+  <link rel="stylesheet" href="jquery-ui.min.css">
+  <script src="external/jquery/jquery.js"></script>
+  <script src="jquery-ui.min.js"></script>
+  <style>
+    label, input { display:block; }
+    input.text { margin-bottom:12px; width:95%; padding: .4em; }
+    fieldset { padding:0; border:0; margin-top:25px; }
+    h1 { font-size: 1.2em; margin: .6em 0; }
+    div#monsters-contain { width: 350px; margin: 20px 0; }
+    div#monsters-contain table { margin: 1em 0; border-collapse: collapse; width: 100%; }
+    div#monsters-contain table td, div#monsters-contain table th { border: 1px solid #eee; padding: .6em 10px; text-align: left; }
+    .ui-dialog .ui-state-error { padding: .3em; }
+    .validateTips { border: 1px solid transparent; padding: 0.3em; }
+  </style>
+  <script>
+  $( function() {
+    var dialog, form,
+ 
+      monster = $( "#monster" ),
+      password = $( "#quantity" ),
+      allFields = $( [] ).add( monster ).add( quantity ),
+      tips = $( ".validateTips" );
+ 
+    function updateTips( t ) {
+      tips
+        .text( t )
+        .addClass( "ui-state-highlight" );
+      setTimeout(function() {
+        tips.removeClass( "ui-state-highlight", 1500 );
+      }, 500 );
+    }
+ 
+    function checkLength( o, n, min, max ) {
+      if ( o.val().length > max || o.val().length < min ) {
+        o.addClass( "ui-state-error" );
+        updateTips( "Length of " + n + " must be between " +
+          min + " and " + max + "." );
+        return false;
+      } else {
+        return true;
+      }
+    }
+ 
+    function checkRegexp( o, regexp, n ) {
+      if ( !( regexp.test( o.val() ) ) ) {
+        o.addClass( "ui-state-error" );
+        updateTips( n );
+        return false;
+      } else {
+        return true;
+      }
+    }
+ 
+    function addMonster() {
+      var valid = true;
+      allFields.removeClass( "ui-state-error" );
+ 
+      valid = valid && checkRegexp( quantity, /^([0-9])+$/, "Quantity must be a number." );
+ 
+      if ( valid ) {
+        $( "#monsters tbody" ).append( "<tr>" +
+          "<td>" + monster.val() + "</td>" +
+          "<td>" + quantity.val() + "</td>" +
+        "</tr>" );
+        dialog.dialog( "close" );
+      }
+      return valid;
+    }
+ 
+    dialog = $( "#dialog-form" ).dialog({
+      autoOpen: false,
+      height: 400,
+      width: 350,
+      modal: true,
+      buttons: {
+        "Add monster": addMonster,
+        Cancel: function() {
+          dialog.dialog( "close" );
+        }
+      },
+      close: function() {
+        form[ 0 ].reset();
+        allFields.removeClass( "ui-state-error" );
+      }
+    });
+ 
+    form = dialog.find( "form" ).on( "submit", function( event ) {
+      event.preventDefault();
+      addMonster();
+    });
+ 
+    $( "#add-monster" ).button().on( "click", function() {
+      dialog.dialog( "open" );
+    });
+
+    $( "#search-monster" ).button().on( "click", function() {
+      alert(self, self.value)
+    });
+  } );
+  </script>
+</head>
 <body>
-<h1>DM Tool</h1>
+ 
+<div id="dialog-form" title="Add monster">
+  <p class="validateTips">All form fields are required.</p>
+ 
+  <form>
+    <fieldset>
+      <label for="quantity">Quantity</label>
+      <input type="text" name="quantity" id="quantity" value="1" class="text ui-widget-content ui-corner-all">
+      <label for="monster">Monster</label>
+      <input type="text" name="monster" id="monster" value="" class="text ui-widget-content ui-corner-all">
+ 
+      <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
+      <button id="search-monster">Search monster</button>
+      <!-- Allow form submission with keyboard without duplicating the dialog button -->
+      <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
+    </fieldset>
+  </form>
+</div>
+ 
+ 
+<div id="monsters-contain" class="ui-widget">
+  <h1>Monsters in this encounter:</h1>
+  <table id="monsters" class="ui-widget ui-widget-content">
+    <thead>
+      <tr class="ui-widget-header ">
+        <th>Quantity</th>
+        <th>Monster</th>
+      </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
+</div>
+<button id="add-monster">Add monster</button>
+ 
+ 
 </body>
 </html>
-

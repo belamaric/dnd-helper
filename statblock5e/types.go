@@ -4,10 +4,12 @@ import (
 	"io"
 	"io/ioutil"
 	"encoding/xml"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
 	"text/template"
+	"path/filepath"
 
 	yaml "gopkg.in/yaml.v2"
 )
@@ -23,54 +25,78 @@ type Encounter struct {
 	} `yaml:monsters`
 }
 
-func LoadEncounter(path string) (*Encounter, error) {
-	b, err := ioutil.ReadFile(path)
+func NewEncounterFromJson(r io.Reader) (*Encounter, error) {
+	b, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
 
 	e := &Encounter{}
+	err = json.Unmarshal(b, e)
+	if err != nil {
+		return nil, err
+	}
+
+	return e, nil
+}
+
+func NewEncounterFromYaml(r io.Reader) (*Encounter, error) {
+	b, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+
+	e := &Encounter{}
+
 	err = yaml.Unmarshal(b, e)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Println("Encounter: ", e)
+	return e, nil
+}
 
-	if e.Source == "" {
-		return nil, fmt.Errorf("No source specified for encounter.")
-	}
-
-	c, err := LoadCompendium(e.Source)
-	if err != nil {
-		return nil, err
-	}
+func (e *Encounter) Load() error {
+	log.Println("Loading encounter: ", e)
 
 	sources := make(map[string]*Compendium)
-	sources[e.Source] = c
+	if e.Source != "" {
+		c, err := LoadCompendium(e.Source)
+		if err != nil {
+			return err
+		}
+
+		sources[e.Source] = c
+	}
+
 	for _, m := range e.Monsters {
 		s := e.Source
 		if m.Source != "" {
 			s = m.Source
 		}
+		if s == "" {
+			return fmt.Errorf("No source set for %q. Skipping.", m.Name)
+		}
 		if _, ok := sources[s]; !ok {
-			cc, err := LoadCompendium(m.Source)
+			c, err := LoadCompendium(m.Source)
 			if err != nil {
-				return nil, err
+				return err
 			}
-			sources[s] = cc
+			sources[s] = c
 		}
 		m.Monster = sources[s].FindMonster(m.Name)
 		if m.Monster == nil {
-			return nil, fmt.Errorf("Could not find %q in %q.", m.Name, s)
+			return fmt.Errorf("Could not find %q in %q.", m.Name, s)
 		}
 	}
-	return e, nil
+	return nil
 }
 
 type Compendium struct {
-	XMLName xml.Name `xml:"compendium"`
-	Monsters []Monster `xml:"monster"`
+	XMLName xml.Name `xml:"compendium" json:"-"`
+	File string
+	Name string
+	Monsters []*Monster `xml:"monster"`
 }
 
 func LoadCompendium(path string) (*Compendium, error) {
@@ -79,12 +105,19 @@ func LoadCompendium(path string) (*Compendium, error) {
 		return nil, fmt.Errorf("Could not load compendium from file %q: %s", path, err)
 	}
 
-	c := &Compendium{}
+        name := filepath.Base(path)
+        name = name[0:len(name)-4]
+        log.Printf("%q has name %q", path, name)
+
+	c := &Compendium{Name: name, File: path}
 	err = xml.Unmarshal(b, c)
 	if err != nil {
 		return nil, err
 	}
 
+	for _, m := range c.Monsters {
+		m.Source = name
+	}
 	return c, nil
 }
 
@@ -112,7 +145,7 @@ func (e *Encounter) Print(w io.Writer) error {
 
 
 type Trait struct {
-	XMLName xml.Name
+	XMLName xml.Name `json:"-"`
 	Name string `xml:"name"`
 	Text []string `xml:"text"`
 	Attack []string `xml:"attack"`
@@ -127,7 +160,8 @@ func (t Trait) FormattedText() []string {
 }
 
 type Monster struct {
-	XMLName xml.Name `xml:"monster"`
+	XMLName xml.Name `xml:"monster" json:"-"`
+	Source string
 	Name string `xml:"name"`
 	Size string `xml:"size"`
 	Type string `xml:"type"`
@@ -210,7 +244,7 @@ func (m *Monster) Subtitle() (string) {
 func (c *Compendium) FindMonster(name string) *Monster {
 	for _, v := range c.Monsters {
 		if v.Name == name {
-			return &v
+			return v
 		}
 	}
 	return nil

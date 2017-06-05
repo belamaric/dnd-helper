@@ -8,15 +8,40 @@ import (
 
 var verbose bool
 func main() {
-	var check, encounter string
+	var check, encounter, addr, root string
 	flag.BoolVar(&verbose, "v", false, "Verbose mode")
 	flag.StringVar(&check, "c", "", "Check the XML file for unparsed XML")
 	flag.StringVar(&encounter, "e", "", "Encounter YAML file")
+	flag.StringVar(&addr, "s", "", "Start server on specified address")
+	flag.StringVar(&root, "d", "", "root directory that contains data and html subdirs")
 
 	flag.Parse()
 
+	if addr != "" {
+		es, err := NewEncounterServer(addr, root)
+		if err != nil {
+			log.Printf("ERROR: Could not create server: %s", err)
+			os.Exit(1)
+		}
+		err = es.Serve()
+		if err != nil {
+			log.Printf("ERROR: Could not start http server: %s", err)
+			os.Exit(1)
+		}
+	}
+
 	if encounter != "" {
-		e, err := LoadEncounter(encounter)
+		f, err := os.Open(encounter)
+		if err != nil {
+			log.Printf("ERROR: Could not open encounter file: %s", err)
+			os.Exit(1)
+		}
+		e, err := NewEncounterFromYaml(f)
+		if err != nil {
+			log.Printf("ERROR: Could not load encounter: %s", err)
+			os.Exit(1)
+		}
+		err = e.Load()
 		if err != nil {
 			log.Printf("ERROR: Could not load encounter: %s", err)
 			os.Exit(1)
@@ -24,7 +49,7 @@ func main() {
 		err = e.Print(os.Stdout)
 		if err != nil {
 			log.Printf("ERROR: Could not print encounter: %s", err)
-			os.Exit(2)
+			os.Exit(1)
 		}
 		return
 	}
@@ -33,7 +58,7 @@ func main() {
 		c, err := LoadCompendium(check)
 		if err != nil {
 			log.Printf("ERROR: Could not load monsters: %s", err)
-			os.Exit(3)
+			os.Exit(1)
 		}
 
 		checkXml(c)
