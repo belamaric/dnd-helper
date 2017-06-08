@@ -23,7 +23,7 @@
     var dialog, form,
  
       monster = $( "#monster" ),
-      password = $( "#quantity" ),
+      quantity = $( "#quantity" ),
       allFields = $( [] ).add( monster ).add( quantity ),
       tips = $( ".validateTips" );
  
@@ -65,9 +65,15 @@
  
       if ( valid ) {
         $( "#monsters tbody" ).append( "<tr>" +
-          "<td>" + monster.val() + "</td>" +
           "<td>" + quantity.val() + "</td>" +
+          "<td>" + monster.val() + "</td>" +
         "</tr>" );
+	var monsters = $("#monsters").data("monsters");
+	if ( monsters === undefined ) {
+		monsters = [];
+	}
+	monsters[monsters.length] = {Quantity: parseInt(quantity.val()), Name: monster.val()};
+	$("#monsters").data("monsters", monsters);
         dialog.dialog( "close" );
       }
       return valid;
@@ -79,7 +85,7 @@
       width: 350,
       modal: true,
       buttons: {
-        "Add monster": addMonster,
+        "Save": addMonster,
         Cancel: function() {
           dialog.dialog( "close" );
         }
@@ -99,17 +105,56 @@
       dialog.dialog( "open" );
     });
 
-    $( "#search-monster" ).button().on( "click", function() {
-      alert(self, self.value)
+    $( "#print-encounter" ).button().on( "click", function() {
+      var encounter = {Name: $( "#encounter_name" ).val(), Monsters: $("#monsters").data("monsters")};
+      $.post("/encounter/statblock5e", JSON.stringify(encounter), function (data) {
+        var w = window.open('about:blank', encounter.Name);
+        w.document.write(data);
+        w.document.close();
+      });
     });
-  } );
+
+    $( "#monster" ).autocomplete({
+      source: function( request, response ) {
+        $.ajax({
+          url: "/monsters",
+          data: {
+            search: request.term
+          },
+          success: function( data ) {
+            response($.map(data.monsters, function (item) {
+		var s = item.Source;
+                var pos = s.lastIndexOf("/")
+		var source = s.substring(pos+1, s.length - 4)
+                return {
+                    label: item.Name + " (" + source + ")",
+                    value: item.Name + " (" + source + ")"
+                };
+            }));
+          }
+        });
+      },
+      minLength: 3,
+      select: function( event, ui ) {
+        console.log( ui.item ?
+          "Selected: " + ui.item.label :
+          "Nothing selected, input was " + this.value);
+      },
+      open: function() {
+        $( this ).removeClass( "ui-corner-all" ).addClass( "ui-corner-top" );
+      },
+      close: function() {
+        $( this ).removeClass( "ui-corner-top" ).addClass( "ui-corner-all" );
+      }
+
+    });
+  });
   </script>
 </head>
 <body>
  
 <div id="dialog-form" title="Add monster">
   <p class="validateTips">All form fields are required.</p>
- 
   <form>
     <fieldset>
       <label for="quantity">Quantity</label>
@@ -118,7 +163,6 @@
       <input type="text" name="monster" id="monster" value="" class="text ui-widget-content ui-corner-all">
  
       <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
-      <button id="search-monster">Search monster</button>
       <!-- Allow form submission with keyboard without duplicating the dialog button -->
       <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
     </fieldset>
@@ -127,7 +171,8 @@
  
  
 <div id="monsters-contain" class="ui-widget">
-  <h1>Monsters in this encounter:</h1>
+  <h1>Encounter Name:</h1><input type="text" name="encounter_name" id="encounter_name" class="text ui-widget-content ui-corner-all">
+  <h1>Monsters:</h1>
   <table id="monsters" class="ui-widget ui-widget-content">
     <thead>
       <tr class="ui-widget-header ">
@@ -140,6 +185,7 @@
   </table>
 </div>
 <button id="add-monster">Add monster</button>
+<button id="print-encounter">Print encounter</button>
  
  
 </body>

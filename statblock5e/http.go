@@ -13,7 +13,8 @@ import (
 type EncounterServer struct {
 	addr string
 	dir string
-	Compendiums map[string]*Compendium
+	compendiums map[string]*Compendium
+	monsters map[string]*Monster
 	server *http.ServeMux
 }
 
@@ -22,7 +23,8 @@ func NewEncounterServer(addr, dir string) (*EncounterServer, error) {
 		addr = ":80"
 	}
 	es := &EncounterServer{addr: addr, dir: dir}
-	es.Compendiums = make(map[string]*Compendium)
+	es.monsters = make(map[string]*Monster)
+	es.compendiums = make(map[string]*Compendium)
 
 	files, err := filepath.Glob(dir + "/data/*.xml")
 	if err != nil {
@@ -34,7 +36,11 @@ func NewEncounterServer(addr, dir string) (*EncounterServer, error) {
 			log.Printf("ERROR: Skipping file %q because it failed loading: %q", file, err)
 			continue
 		}
-		es.Compendiums[c.Name] = c
+		es.compendiums[c.Name] = c
+		for _, m := range c.Monsters {
+			m.Source = c.File
+			es.monsters[m.Name + " (" + c.Name + ")"] = m
+		}
 	}
 
 	return es, nil
@@ -66,16 +72,7 @@ func (es *EncounterServer) handleEncounterStatBlock5e(w http.ResponseWriter, r *
 		return
 	}
 
-	// fix the Source field
-	if c, ok := es.Compendiums[e.Source]; ok { 
-		e.Source = c.File
-	}
-	for _, m := range e.Monsters {
-		if c, ok := es.Compendiums[m.Source]; ok {
-			m.Source = c.File
-		}
-	}
-	err = e.Load()
+	e.Fill(es.monsters)
 	if err != nil {
 		io.WriteString(w, err.Error())
 		return
@@ -91,7 +88,7 @@ func (es *EncounterServer) handleMonsterList(w http.ResponseWriter, r *http.Requ
 	compendium := strings.ToLower(r.FormValue("compendium"))
 	search := strings.ToLower(r.FormValue("search"))
 	var monsters []*Monster
-	for _, c := range es.Compendiums {
+	for _, c := range es.compendiums {
 		if !strings.Contains(strings.ToLower(c.Name), compendium) {
 			continue
 		}

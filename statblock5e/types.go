@@ -31,6 +31,7 @@ func NewEncounterFromJson(r io.Reader) (*Encounter, error) {
 		return nil, err
 	}
 
+	log.Println(string(b))
 	e := &Encounter{}
 	err = json.Unmarshal(b, e)
 	if err != nil {
@@ -54,6 +55,16 @@ func NewEncounterFromYaml(r io.Reader) (*Encounter, error) {
 	}
 
 	return e, nil
+}
+
+func (e *Encounter) Fill(monsters map[string]*Monster) {
+	for _, m := range e.Monsters {
+		if mm, ok := monsters[m.Name]; ok {
+			m.Monster = mm
+		} else {
+			log.Printf("Monster %q not found.", m.Name)
+		}
+	}
 }
 
 func (e *Encounter) Load() error {
