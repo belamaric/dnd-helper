@@ -1,0 +1,4 @@
+dmtool.info
+
+root /home/jbelamaric/dnd-helper/html
+proxy /api localhost:8000
