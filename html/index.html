@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>dmtool.info Encounter Tool</title>
   <link rel="stylesheet" href="jquery-ui.min.css">
+  <link rel="stylesheet" href="dnd.css">
   <script src="external/jquery/jquery.js"></script>
   <script src="jquery-ui.min.js"></script>
   <style>
@@ -21,12 +22,12 @@
   <script>
   $( function() {
     var dialog, form,
- 
+
       monster = $( "#monster" ),
       quantity = $( "#quantity" ),
       allFields = $( [] ).add( monster ).add( quantity ),
       tips = $( ".validateTips" );
- 
+
     function updateTips( t ) {
       tips
         .text( t )
@@ -35,7 +36,7 @@
         tips.removeClass( "ui-state-highlight", 1500 );
       }, 500 );
     }
- 
+
     function checkLength( o, n, min, max ) {
       if ( o.val().length > max || o.val().length < min ) {
         o.addClass( "ui-state-error" );
@@ -46,7 +47,7 @@
         return true;
       }
     }
- 
+
     function checkRegexp( o, regexp, n ) {
       if ( !( regexp.test( o.val() ) ) ) {
         o.addClass( "ui-state-error" );
@@ -56,13 +57,13 @@
         return true;
       }
     }
- 
+
     function addMonster() {
       var valid = true;
       allFields.removeClass( "ui-state-error" );
- 
+
       valid = valid && checkRegexp( quantity, /^([0-9])+$/, "Quantity must be a number." );
- 
+
       if ( valid ) {
         $( "#monsters tbody" ).append( "<tr>" +
           "<td>" + quantity.val() + "</td>" +
@@ -78,7 +79,7 @@
       }
       return valid;
     }
- 
+
     dialog = $( "#dialog-form" ).dialog({
       autoOpen: false,
       height: 400,
@@ -95,12 +96,12 @@
         allFields.removeClass( "ui-state-error" );
       }
     });
- 
+
     form = dialog.find( "form" ).on( "submit", function( event ) {
       event.preventDefault();
       addMonster();
     });
- 
+
     $( "#add-monster" ).button().on( "click", function() {
       dialog.dialog( "open" );
     });
@@ -152,7 +153,9 @@
   </script>
 </head>
 <body>
- 
+  <div>
+ <h1 class="title">D&amp;D Encounter Tool</h1>
+ </div>
 <div id="dialog-form" title="Add monster">
   <p class="validateTips">All form fields are required.</p>
   <form>
@@ -161,15 +164,15 @@
       <input type="text" name="quantity" id="quantity" value="1" class="text ui-widget-content ui-corner-all">
       <label for="monster">Monster</label>
       <input type="text" name="monster" id="monster" value="" class="text ui-widget-content ui-corner-all">
- 
+
       <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
       <!-- Allow form submission with keyboard without duplicating the dialog button -->
       <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
     </fieldset>
   </form>
 </div>
- 
- 
+
+
 <div id="monsters-contain" class="ui-widget">
   <h1>Encounter Name:</h1><input type="text" name="encounter_name" id="encounter_name" class="text ui-widget-content ui-corner-all">
   <h1>Monsters:</h1>
@@ -186,7 +189,7 @@
 </div>
 <button id="add-monster">Add monster</button>
 <button id="print-encounter">Print encounter</button>
- 
- 
+
+
 </body>
 </html>
