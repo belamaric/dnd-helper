@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>jQuery UI Dialog - Modal form</title>
+  <title>dmtool.info Encounter Tool</title>
   <link rel="stylesheet" href="jquery-ui.min.css">
   <script src="external/jquery/jquery.js"></script>
   <script src="jquery-ui.min.js"></script>
@@ -107,8 +107,8 @@
 
     $( "#print-encounter" ).button().on( "click", function() {
       var encounter = {Name: $( "#encounter_name" ).val(), Monsters: $("#monsters").data("monsters")};
+      var w = window.open('about:blank', encounter.Name);
       $.post("/api/encounter/statblock5e", JSON.stringify(encounter), function (data) {
-        var w = window.open('about:blank', encounter.Name);
         w.document.write(data);
         w.document.close();
       });
