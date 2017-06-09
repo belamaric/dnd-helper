@@ -107,7 +107,7 @@
 
     $( "#print-encounter" ).button().on( "click", function() {
       var encounter = {Name: $( "#encounter_name" ).val(), Monsters: $("#monsters").data("monsters")};
-      $.post("/encounter/statblock5e", JSON.stringify(encounter), function (data) {
+      $.post("/api/encounter/statblock5e", JSON.stringify(encounter), function (data) {
         var w = window.open('about:blank', encounter.Name);
         w.document.write(data);
         w.document.close();
@@ -117,7 +117,7 @@
     $( "#monster" ).autocomplete({
       source: function( request, response ) {
         $.ajax({
-          url: "/monsters",
+          url: "/api/monsters",
           data: {
             search: request.term
           },

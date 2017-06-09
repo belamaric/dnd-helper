@@ -54,10 +54,10 @@ func (es *EncounterServer) Serve() error {
 	}
 
 	es.server = http.NewServeMux()
-	es.server.HandleFunc("/encounter/statblock5e", func(w http.ResponseWriter, r *http.Request) {
+	es.server.HandleFunc("/api/encounter/statblock5e", func(w http.ResponseWriter, r *http.Request) {
 		es.handleEncounterStatBlock5e(w,r)
 	})
-	es.server.HandleFunc("/monsters", func(w http.ResponseWriter, r *http.Request) {
+	es.server.HandleFunc("/api/monsters", func(w http.ResponseWriter, r *http.Request) {
 		es.handleMonsterList(w,r)
 	})
 	es.server.Handle("/", http.FileServer(http.Dir(es.dir + "/html")))
