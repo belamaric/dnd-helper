@@ -1,4 +1,4 @@
 dmtool.info
 
-root /home/jbelamaric/dnd-helper/html
+root /var/site/dmtool.info/html
 proxy /api localhost:8000
