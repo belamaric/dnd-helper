@@ -1,4 +1,4 @@
-dmtool.info
+dmtool.info www.dmtool.info
 
 root /var/site/dmtool.info/html
 proxy /api localhost:8000
