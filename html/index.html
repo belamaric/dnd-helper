@@ -8,6 +8,16 @@
   <link rel="stylesheet" href="dnd.css">
   <script src="external/jquery/jquery.js"></script>
   <script src="jquery-ui.min.js"></script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-100885557-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
   <style>
     label, input { display:block; }
     input.text { margin-bottom:12px; width:95%; padding: .4em; }
@@ -153,12 +163,17 @@
   </script>
 </head>
 <body>
+<table>
+<tr><td colspan="2">
   <div>
  <h1 class="title">D&amp;D Encounter Tool</h1>
  </div>
  <p class="intro">Welcome to the D&amp;D encounter builder! My dad and I created this when we realized that there were no encounter builders anywhere.
     We hope this webpage (Something ducks walk on) inspires multitudes of Dungeoneers and masters alike!
      Live long and prosper, have fun, and only use chrome because safari doesn't work. Cheers luv, Owenbnerd.</p>
+<h2 class="section-header">How to Use This Builder</h2>
+<p class="instructions">To use this builder, you click <b>Add Monster</b> and you will see a form where you can enter a quantity and type of monster. As you type the name of the monster, it will search the various bestiaries - be sure to pick from the list that is presented, or it won't work. Add as many monsters as you want for the encounter, and then click <b>Print</b> - remember, this only really works well in Chrome.</p>
+<p class="instructions">You'll get a new tab or windwo that looks like the picture on the right. This is intended to be printed out and used to track status during the encounter. Hopefully this will help you keep the pace up in your games. Enjoy!</p>
 <div id="dialog-form" title="Add monster">
   <p class="validateTips">All form fields are required.</p>
   <form>
@@ -174,8 +189,7 @@
     </fieldset>
   </form>
 </div>
-
-
+</td></tr><tr><td valign="top">
 <div id="monsters-contain" class="ui-widget">
   <h1>Encounter Name:</h1><input type="text" name="encounter_name" id="encounter_name" class="text ui-widget-content ui-corner-all">
   <h1>Monsters:</h1>
@@ -192,8 +206,14 @@
 </div>
 <button id="add-monster">Add monster</button>
 <button id="print-encounter">Print encounter</button>
-<p class="note1">Please note: This page was made possible by Mr. Val Markovic (http://valloric.github.io/statblock5e/),
-   whose files we used (https://github.com/ceryliae/DnDAppFiles) for the builder.
+</td><td valign="top">
+<div>
+<img src="/images/encounter-help.png" width="500"></img>
+</div>
+</td>
+</tr>
+</table>
+<p class="note1">Please note: This page was made possible by <a href="http://valloric.github.io/statblock5e/">valloric's stat block templates</a> and the data from <a href="https://github.com/ceryliae/DnDAppFiles">ceryliae</a>.
   Thank you so much!</p>
 
 </body>

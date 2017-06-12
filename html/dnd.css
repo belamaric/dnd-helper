@@ -1,12 +1,24 @@
 .title {
-  font-size: 32pt;
-  font-family:fantasy;
+  font-size: 24pt;
+  font-family: fantasy, sans-serif;
 }
+
+.section-header {
+  font-size: 18pt;
+  font-family: fantasy, sans-serif;
+}
+
+.instructions {
+  font-size: 14pt;
+  font-family: serif;
+}
+
 .intro {
-  font-size: 16pt;
-  font-family: cursive;
+  font-size: 14pt;
+  font-family: cursive, serif;
 }
+
 .note1 {
-  font-size: 16;
+  font-size: 14pt;
   font-style: italic;
 }
