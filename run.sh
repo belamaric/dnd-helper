@@ -1,7 +1,7 @@
 #!/bin/bash
 
 docker run -d  \
-    -e GIT_SYNC_REPO=git@github.com:johnbelamaric/dnd-helper.git  \
+    -e GIT_SYNC_REPO=git@github.com:belamaric/dnd-helper.git  \
     -e GIT_SYNC_DEST=/git/dnd-helper  \
     -e GIT_SYNC_BRANCH=master \
     -e GIT_SYNC_REV=FETCH_HEAD \
@@ -15,7 +15,7 @@ while [ ! -d /home/jbelamaric/dnd-helper/html ]; do
 done
 
 echo Building the tool...
-docker run -v /home/jbelamaric/dnd-helper/statblock5e:/go/src/github.com/johnbelamaric/dnd-helper/statblock5e infoblox/buildtool sh -c "cd /go/src/github.com/johnbelamaric/dnd-helper/statblock5e && go get && go build"
+docker run -v /home/jbelamaric/dnd-helper/statblock5e:/go/src/github.com/belamaric/dnd-helper/statblock5e infoblox/buildtool sh -c "cd /go/src/github.com/belamaric/dnd-helper/statblock5e && go get && go build"
 
 ID=$(docker run -d -v /home/jbelamaric/dnd-helper/Caddyfile:/etc/Caddyfile -v /home/jbelamaric/dnd-helper/html:/var/site/dmtool.info/html -v /home/jbelamaric/certs:/root/.caddy -p 80:80 -p 443:443 -v /home/jbelamaric/logs:/var/site/dmtool.info/logs abiosoft/caddy)
 
