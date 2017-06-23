@@ -1,4 +1,5 @@
 dmtool.info www.dmtool.info
 
+log /var/site/dmtool.info/logs/access.log
 root /var/site/dmtool.info/html
 proxy /api localhost:8000
