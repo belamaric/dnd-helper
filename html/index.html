@@ -122,6 +122,9 @@
     });
 
     $( "#add-monster" ).button().on( "click", function() {
+      if( navigator.userAgent .indexOf("Chrome")==-1){
+        alert("This probably won't work, try GOOGLE CHROME. Owenbnerd is not amused. -_-");
+      }
       dialog.dialog( "open" );
     });
 
